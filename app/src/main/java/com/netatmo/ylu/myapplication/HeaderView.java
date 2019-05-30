@@ -3,7 +3,6 @@ package com.netatmo.ylu.myapplication;
 import android.content.Context;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -42,21 +41,33 @@ public class HeaderView extends LinearLayout {
             public boolean onScale(ScaleGestureDetector detector) {
 
                 factor *= detector.getScaleFactor();
-                /*if(factor < imageView.getScaleX()){
-                    Log.e("onScale", String.format("pivotX %f, ratio %f, transX %f", imageView.getPivotX(), imageView.getScaleX(), imageView.getTranslationX()));
-                    if(imageView.getPivotX() * (imageView.getScaleX()-1) - imageView.getTranslationX()<=0){
-                        Log.e("onScale", "touch left side");
+                if(factor < 1.0f){
+                    return false;
+                }
+                if(factor < imageView.getScaleX()){
+                    float newPivotX = imageView.getPivotX();
+                    float newPivotY = imageView.getPivotY();
+                    float newTransX = imageView.getTranslationX();
+                    float newTransY = imageView.getTranslationY();
+                    if(imageView.getPivotX() * (1 - imageView.getScaleX()) + imageView.getTranslationX()>=0){
+                        newPivotX = 0;
+                        newTransX = 0;
+                    } else if((imageView.getWidth() - imageView.getPivotX()) * (imageView.getScaleX()-1) + imageView.getTranslationX() <= 0){
+                        newPivotX = imageView.getWidth();
+                        newTransX = 0;
                     }
-                    if((imageView.getWidth() - imageView.getPivotX()) * (imageView.getScaleX()-1) + imageView.getTranslationX() <= imageView.getWidth()){
-                        Log.e("onScale", "touch right side");
+                    if(imageView.getPivotY() * (1-imageView.getScaleY()) + imageView.getTranslationY() >= 0){
+                        newPivotY = 0;
+                        newTransY = 0;
+                    } else if((imageView.getHeight() - imageView.getPivotY()) * (imageView.getScaleY()-1) + imageView.getTranslationY() <= 0){
+                        newPivotY = getHeight();
+                        newTransY = 0;
                     }
-                    if(imageView.getPivotY() * (imageView.getScaleY()-1) - imageView.getTranslationY() - imageView.getPivotY()<= 0){
-                        Log.e("onScale", "touch top side");
-                    }
-                    if((imageView.getHeight() - imageView.getPivotY()) * (imageView.getScaleY()-1) + imageView.getTranslationY() <= imageView.getHeight()){
-                        Log.e("onScale", "touch bottom side");
-                    }
-                }*/
+                    imageView.setTranslationX(newTransX);
+                    imageView.setTranslationY(newTransY);
+                    imageView.setPivotX(newPivotX);
+                    imageView.setPivotY(newPivotY);
+                }
                 imageView.setScaleX(factor);
                 imageView.setScaleY(factor);
 
@@ -73,7 +84,6 @@ public class HeaderView extends LinearLayout {
                 imageView.setTranslationY(imageView.getTranslationY() + (imageView.getPivotY() - newY) * (1 - imageView.getScaleY()));
                 imageView.setPivotX(newX);
                 imageView.setPivotY(newY);
-
                 return true;
             }
 
@@ -99,11 +109,8 @@ public class HeaderView extends LinearLayout {
                     float limitRight = (imageView.getWidth() - imageView.getPivotX()) * (imageView.getScaleX()  -1)  + imageView.getTranslationX();
                     float limitTop = imageView.getPivotY() * ( imageView.getScaleY() - 1) - imageView.getTranslationY();
                     float limitBottom = (imageView.getHeight() - imageView.getPivotY()) * (imageView.getScaleY() - 1) + imageView.getTranslationY();
-                    Log.e("ACTION_MOVE",String.format("left %f, right %f, top %f, bot %f",limitLeft,limitRight,limitTop, limitBottom ));
                     float deltaX = event.getX() - lastX;
                     float deltaY = event.getY() - lastY;
-                    Log.e("ACTION_MOVE",String.format("dx %f, dy %f",deltaX,deltaY));
-
                     deltaX = Math.max( - limitRight, Math.min(limitLeft , deltaX));
                     deltaY = Math.max( - limitBottom, Math.min(limitTop, deltaY));
 
